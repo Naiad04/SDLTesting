@@ -96,6 +96,7 @@ int main(int argc, char* argv[])
 				break;
 			case SDL_BUTTON_RIGHT:
 				SDL_ShowSimpleMessageBox(0, "Mouse", "Right button was pressed!", window);
+				Mix_PlayChannel(-1, sound, 0); if (channel == -1) { fprintf(stderr, "Unable to play WAV file: %s\n", Mix_GetError()); }
 				break;
 			default:
 				SDL_ShowSimpleMessageBox(0, "Mouse", "Some other button was pressed!", window);
