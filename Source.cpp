@@ -10,7 +10,7 @@
 // Don't make it 0 or less :)
 #define FRAME_VALUES 10
 // frame limit
-const int FRAMES_PER_SECOND = 144;
+int FRAMES_PER_SECOND = 144;
 
 SDL_Rect calculateNyan_srcrect() {
 	Uint32 ticks = SDL_GetTicks();
@@ -161,6 +161,17 @@ int main(int argc, char* argv[])
 			if (keystate[SDL_SCANCODE_P]) {
 				if (renderclear) renderclear = false;
 				else renderclear = true;
+			}
+			if (keystate[SDL_SCANCODE_J]) {
+				FRAMES_PER_SECOND++;
+			}
+			if (keystate[SDL_SCANCODE_K]) {
+				FRAMES_PER_SECOND--;
+				if (FRAMES_PER_SECOND == 0) FRAMES_PER_SECOND++;
+			}
+			if (keystate[SDL_SCANCODE_L]) {
+				if (cap) cap = false;
+				else cap = true;
 			}
 		}
 		else if (event.type == SDL_MOUSEBUTTONDOWN) {
