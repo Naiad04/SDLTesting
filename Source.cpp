@@ -79,6 +79,7 @@ int main(int argc, char* argv[])
 	int texW = 0;
 	int texH = 0;
 	bool boo = false;
+	bool renderclear = true;
 
 	// Play loaded audio
 	int channel;
@@ -89,22 +90,26 @@ int main(int argc, char* argv[])
 	{
 		fps_cap_timer.start();
 
+		const Uint8* keystate = SDL_GetKeyboardState(NULL);
+
+		//Event Handling
 		SDL_PollEvent(&event);
-		switch (event.type)
+		if (event.type == SDL_KEYDOWN)
 		{
-		case SDL_QUIT:
-			quit = true;
-			break;
-		case SDL_KEYDOWN:
-			switch (event.key.keysym.sym)
-			{
-			case SDLK_LEFT:  x--; break;
-			case SDLK_RIGHT: x++; break;
-			case SDLK_UP:    y--; break;
-			case SDLK_DOWN:  y++; break;
+			if (keystate[SDL_SCANCODE_LEFT]) {
+				x--;
 			}
-			break;
-		case SDL_MOUSEBUTTONDOWN:
+			if (keystate[SDL_SCANCODE_RIGHT]) {
+				x++;
+			}
+			if (keystate[SDL_SCANCODE_UP]) {
+				y--;
+			}
+			if (keystate[SDL_SCANCODE_DOWN]) {
+				y++;
+			}
+		}
+		else if (event.type == SDL_MOUSEBUTTONDOWN) {
 			int mouseX = event.motion.x;
 			int mouseY = event.motion.y;
 
@@ -124,10 +129,12 @@ int main(int argc, char* argv[])
 				SDL_ShowSimpleMessageBox(0, "Mouse", "Some other button was pressed!", window);
 				break;
 			}
-		
-			break;
 		}
-		SDL_RenderClear(renderer);
+		else if(event.type == SDL_QUIT) {
+			quit = true;
+		}
+
+		if(renderclear)SDL_RenderClear(renderer);
 		
 		if (!boo) {
 			SDL_DestroyTexture(fps_texture);
