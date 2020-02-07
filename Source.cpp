@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[])
 {
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
 	TTF_Init();
 	SDL_Window* window = SDL_CreateWindow
 	("A Test SDL2 window", // window's title
@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 
 	//Fps counter surface and using that create a texture
 
-	SDL_Color text_color = { 255, 255, 255 };
+	SDL_Color text_color = { 0, 0, 0 };
 	SDL_Surface* fps_surface = TTF_RenderText_Solid(font,
 		"LAMEEEEE", text_color);
 	SDL_Texture* fps_texture = SDL_CreateTextureFromSurface(renderer, fps_surface);
@@ -33,12 +33,21 @@ int main(int argc, char* argv[])
 		image);
 	SDL_FreeSurface(image); // Destroy surface since already converted to texture.
 
-
-
+	// Background color
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	
 
+	//Load Main Music Wav file
 
+	SDL_AudioSpec wavSpec;
+	Uint32 wavLength;
+	Uint8* wavBuffer;
+
+	SDL_LoadWAV("main.wav", &wavSpec, &wavBuffer, &wavLength);
+	//Open audio device
+	SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
+
+	//Logic
 	bool quit = false;
 	SDL_Event event;
 
@@ -47,11 +56,15 @@ int main(int argc, char* argv[])
 
 	int texW = 0;
 	int texH = 0;
+	bool boo = false;
 
+	// Play loaded audio
+	SDL_QueueAudio(deviceId, wavBuffer, wavLength);
+	SDL_PauseAudioDevice(deviceId, 0);
 
 	while (!quit)
 	{
-		SDL_Delay(20);
+		SDL_Delay(10);
 		SDL_PollEvent(&event);
 		switch (event.type)
 		{
@@ -89,16 +102,38 @@ int main(int argc, char* argv[])
 		
 			break;
 		}
+		SDL_RenderClear(renderer);
+		
+		if (!boo) {
+			SDL_DestroyTexture(fps_texture);
+			SDL_FreeSurface(fps_surface);
+			 fps_surface = TTF_RenderText_Solid(font,
+				"NOOOOOOOOOOOO", text_color);
+			 fps_texture = SDL_CreateTextureFromSurface(renderer, fps_surface);
+			boo = true;
+		}
+		else {
+			SDL_DestroyTexture(fps_texture);
+			SDL_FreeSurface(fps_surface);
+			 fps_surface = TTF_RenderText_Solid(font,
+				"LAMEEEEE", text_color);
+			 fps_texture = SDL_CreateTextureFromSurface(renderer, fps_surface);
+			 boo = false;
+		}
 
 		SDL_QueryTexture(fps_texture, NULL, NULL, &texW, &texH);
 		SDL_Rect dstrect = { x, y, 64, 64 };
 		SDL_Rect fps_dstrect = { 0, 0, texW, texH };
-		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, fps_texture, NULL, &fps_dstrect);
 		SDL_RenderCopy(renderer, texture, NULL, &dstrect);
 		SDL_RenderPresent(renderer);
 
 	}
+
+
+	SDL_CloseAudioDevice(deviceId);
+	SDL_FreeWAV(wavBuffer);
+	SDL_Quit();
 
 	TTF_CloseFont(font);
 	SDL_DestroyTexture(fps_texture);
