@@ -4,6 +4,8 @@
 #include <SDL_mixer.h>
 #include "LTimer.h"
 
+const int FRAMES_PER_SECOND = 144;
+
 int main(int argc, char* argv[])
 {
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
@@ -18,8 +20,14 @@ int main(int argc, char* argv[])
 
 	TTF_Font* font = TTF_OpenFont("arial.ttf", 25);
 
-	//Fps counter surface and using that create a texture
+	//FrameRate Limiting logic
 
+	//Whether or not to cap the frame rate
+	bool cap = true;
+	LTimer fps_cap_timer;
+
+
+	//Fps counter surface and using that create a texture
 	SDL_Color text_color = { 0, 0, 0 };
 	SDL_Surface* fps_surface = TTF_RenderText_Solid(font,
 		"LAMEEEEE", text_color);
@@ -66,7 +74,8 @@ int main(int argc, char* argv[])
 
 	while (!quit)
 	{
-		SDL_Delay(10);
+		fps_cap_timer.start();
+
 		SDL_PollEvent(&event);
 		switch (event.type)
 		{
@@ -131,6 +140,11 @@ int main(int argc, char* argv[])
 		SDL_RenderCopy(renderer, texture, NULL, &dstrect);
 		SDL_RenderPresent(renderer);
 
+		if ((cap == true) && (fps_cap_timer.getTicks() < 1000 / FRAMES_PER_SECOND))
+		{
+			//Sleep the remaining frame time
+			SDL_Delay((1000 / FRAMES_PER_SECOND) - fps_cap_timer.getTicks());
+		}
 	}
 
 
