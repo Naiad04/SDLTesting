@@ -37,15 +37,16 @@ int main(int argc, char* argv[])
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	
 
-	//Load Main Music Wav file
+	//Load Main Music Wav file and set mixer
+	int audio_rate = 22050;
+	Uint16 audio_format = AUDIO_S16SYS;
+	int audio_channels = 2;
+	int audio_buffers = 4096;
 
-	SDL_AudioSpec wavSpec;
-	Uint32 wavLength;
-	Uint8* wavBuffer;
+	if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) != 0) { fprintf(stderr, "Unable to initialize audio: %s\n", Mix_GetError()); exit(1); }
 
-	SDL_LoadWAV("main.wav", &wavSpec, &wavBuffer, &wavLength);
-	//Open audio device
-	SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
+	Mix_Chunk* sound = NULL;
+	sound = Mix_LoadWAV("main.wav"); if (sound == NULL) { fprintf(stderr, "Unable to load WAV file: %s\n", Mix_GetError()); }
 
 	//Logic
 	bool quit = false;
@@ -59,8 +60,9 @@ int main(int argc, char* argv[])
 	bool boo = false;
 
 	// Play loaded audio
-	SDL_QueueAudio(deviceId, wavBuffer, wavLength);
-	SDL_PauseAudioDevice(deviceId, 0);
+	int channel;
+	channel = Mix_PlayChannel(-1, sound, 0); if (channel == -1) { fprintf(stderr, "Unable to play WAV file: %s\n", Mix_GetError()); }
+
 
 	while (!quit)
 	{
@@ -131,9 +133,8 @@ int main(int argc, char* argv[])
 	}
 
 
-	SDL_CloseAudioDevice(deviceId);
-	SDL_FreeWAV(wavBuffer);
-	SDL_Quit();
+	Mix_FreeChunk(sound);
+	Mix_CloseAudio();
 
 	TTF_CloseFont(font);
 	SDL_DestroyTexture(fps_texture);
