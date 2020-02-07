@@ -108,6 +108,10 @@ int main(int argc, char* argv[])
 			if (keystate[SDL_SCANCODE_DOWN]) {
 				y++;
 			}
+			if (keystate[SDL_SCANCODE_P]) {
+				if (renderclear) renderclear = false;
+				else renderclear = true;
+			}
 		}
 		else if (event.type == SDL_MOUSEBUTTONDOWN) {
 			int mouseX = event.motion.x;
