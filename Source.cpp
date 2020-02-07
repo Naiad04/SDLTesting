@@ -6,6 +6,14 @@
 
 const int FRAMES_PER_SECOND = 144;
 
+SDL_Rect calculateNyan_srcrect() {
+	Uint32 ticks = SDL_GetTicks();
+	Uint32 secondsish = ticks / 100;
+	Uint32 sprite = secondsish % 8;
+	SDL_Rect srcrect = { 0, sprite * 200, 316, 200 };
+	return srcrect;
+}
+
 int main(int argc, char* argv[])
 {
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
@@ -40,6 +48,11 @@ int main(int argc, char* argv[])
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer,
 		image);
 	SDL_FreeSurface(image); // Destroy surface since already converted to texture.
+
+	//Create nyancat texture using surface (to animate)
+	SDL_Surface* nyan_image = SDL_LoadBMP("nyan.bmp");
+	SDL_Texture* nyan_texture = SDL_CreateTextureFromSurface(renderer, nyan_image);
+	SDL_FreeSurface(nyan_image);
 
 	// Background color
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -135,8 +148,11 @@ int main(int argc, char* argv[])
 
 		SDL_QueryTexture(fps_texture, NULL, NULL, &texW, &texH);
 		SDL_Rect dstrect = { x, y, 64, 64 };
+		SDL_Rect nyan_srcrect = calculateNyan_srcrect();// { 0, 0, 316, 200 };
+		SDL_Rect nyan_dstrect = { 800, 800, 316, 200 };
 		SDL_Rect fps_dstrect = { 0, 0, texW, texH };
 		SDL_RenderCopy(renderer, fps_texture, NULL, &fps_dstrect);
+		SDL_RenderCopy(renderer, nyan_texture, &nyan_srcrect, &nyan_dstrect);
 		SDL_RenderCopy(renderer, texture, NULL, &dstrect);
 		SDL_RenderPresent(renderer);
 
@@ -157,6 +173,7 @@ int main(int argc, char* argv[])
 
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyTexture(texture);
+	SDL_DestroyTexture(nyan_texture);
 	SDL_DestroyWindow(window);
 	TTF_Quit();
 	SDL_Quit();
