@@ -1,9 +1,15 @@
 #include <sstream>
+#include <string> 
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <SDL_mixer.h>
 #include "LTimer.h"
 
+// How many frames time values to keep
+// The higher the value the smoother the result is...
+// Don't make it 0 or less :)
+#define FRAME_VALUES 10
+// frame limit
 const int FRAMES_PER_SECOND = 144;
 
 SDL_Rect calculateNyan_srcrect() {
@@ -12,6 +18,51 @@ SDL_Rect calculateNyan_srcrect() {
 	Uint32 sprite = secondsish % 8;
 	SDL_Rect srcrect = { 0, sprite * 200, 316, 200 };
 	return srcrect;
+}
+
+Uint32 frametimes[FRAME_VALUES];
+Uint32 frametimelast;
+Uint32 framecount;
+float framespersecond;
+
+// This function gets called once on startup.
+void fpsinit() {
+
+	// Set all frame times to 0ms.
+	memset(frametimes, 0, sizeof(frametimes));
+	framecount = 0;
+	framespersecond = 0;
+	frametimelast = SDL_GetTicks();
+
+}
+
+void fpsthink() {
+
+	Uint32 frametimesindex;
+	Uint32 getticks;
+	Uint32 count;
+	Uint32 i;
+
+	frametimesindex = framecount % FRAME_VALUES;
+	getticks = SDL_GetTicks();
+	frametimes[frametimesindex] = getticks - frametimelast;
+	frametimelast = getticks;
+	framecount++;
+
+	if (framecount < FRAME_VALUES) {
+		count = framecount;
+	}
+	else {
+		count = FRAME_VALUES;
+	}
+	// add up all the values and divide to get the average frame time.
+	framespersecond = 0;
+	for (i = 0; i < count; i++) {
+		framespersecond += frametimes[i];
+	}
+	framespersecond /= count;
+	// now to make it an actual frames per second value...
+	framespersecond = 1000.f / framespersecond;
 }
 
 int main(int argc, char* argv[])
@@ -36,11 +87,11 @@ int main(int argc, char* argv[])
 
 
 	//Fps counter surface and using that create a texture
+	fpsinit();
 	SDL_Color text_color = { 0, 0, 0 };
 	SDL_Surface* fps_surface = TTF_RenderText_Solid(font,
 		"LAMEEEEE", text_color);
 	SDL_Texture* fps_texture = SDL_CreateTextureFromSurface(renderer, fps_surface);
-
 
 	//Create character texture using a surface
 
@@ -78,7 +129,6 @@ int main(int argc, char* argv[])
 
 	int texW = 0;
 	int texH = 0;
-	bool boo = false;
 	bool renderclear = true;
 
 	// Play loaded audio
@@ -139,23 +189,18 @@ int main(int argc, char* argv[])
 		}
 
 		if(renderclear)SDL_RenderClear(renderer);
-		
-		if (!boo) {
-			SDL_DestroyTexture(fps_texture);
-			SDL_FreeSurface(fps_surface);
-			 fps_surface = TTF_RenderText_Solid(font,
-				"NOOOOOOOOOOOO", text_color);
-			 fps_texture = SDL_CreateTextureFromSurface(renderer, fps_surface);
-			boo = true;
-		}
-		else {
-			SDL_DestroyTexture(fps_texture);
-			SDL_FreeSurface(fps_surface);
-			 fps_surface = TTF_RenderText_Solid(font,
-				"LAMEEEEE", text_color);
-			 fps_texture = SDL_CreateTextureFromSurface(renderer, fps_surface);
-			 boo = false;
-		}
+
+		SDL_DestroyTexture(fps_texture);
+		SDL_FreeSurface(fps_surface);
+		std::string fpsText = "Average FPS: ";
+		// Calculate fps
+		fpsthink();
+
+		std::string fpsCount = std::to_string(framespersecond);
+		fps_surface = TTF_RenderText_Solid(font,
+			fpsText.append(fpsCount).c_str(), text_color);
+		fps_texture = SDL_CreateTextureFromSurface(renderer, fps_surface);
+
 
 		SDL_QueryTexture(fps_texture, NULL, NULL, &texW, &texH);
 		SDL_Rect dstrect = { x, y, 64, 64 };
